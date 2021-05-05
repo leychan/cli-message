@@ -11,7 +11,8 @@
     "minimum-stability": "stable",
     "require": {
         "ext-iconv": "*",
-        "ext-mbstring": "*"
+        "ext-mbstring": "*",
+        "league/climate": "^3.7"
     },
     "autoload": {
         "psr-4": {
