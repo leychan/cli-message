@@ -136,7 +136,7 @@ class CliMessage
                     $offset = $i * self::PER_FONT_BINARY_LENGTH + $j; //当前点阵图数据在数组中的位置
                     $this->dot_array[$line][$y][$x + $i * self::WIDTH] =
                         isset($this->message_array[$line][$offset]) && $this->message_array[$line][$offset] == 1
-                            ? $this->inner_show : $this->outside_show;
+                            ? $this->inner_show : $this->outer_show;
                 }
             }
         }
