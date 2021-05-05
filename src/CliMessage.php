@@ -15,7 +15,7 @@ class CliMessage
     private $gb2312_message = '';
     private $dot_message = '';
     private $inner_show = '■';
-    private $outside_show = '♡';
+    private $outer_show = '♡';
     private $dot_array = [];
     private $print_line_frequency = 130000;
     private $message_array = [];
@@ -40,6 +40,14 @@ class CliMessage
     public function setMessage(string $message)
     {
         $this->message = $message;
+    }
+
+    public function setInnerShow(string $inner_show) {
+        $this->inner_show = $inner_show;
+    }
+
+    public function setOuterShow(string $outer_show) {
+        $this->outer_show = $outer_show;
     }
 
     /**
