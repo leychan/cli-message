@@ -1,0 +1,21 @@
+{
+    "name": "leychan/cli-message",
+    "description": "print dot matrix message in console with php",
+    "type": "library",
+    "authors": [
+        {
+            "name": "leychan",
+            "email": "sanyue0315@outlook.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "ext-iconv": "*",
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "cliMessage\\": "src/"
+        }
+    }
+}
