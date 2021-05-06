@@ -54,7 +54,7 @@ class CliMessage
     /**
      * @var int 打印的速度(频率), 微秒
      */
-    private int $print_line_frequency = 130000;
+    private int $print_line_frequency = 750000;
 
     /**
      * @var array 二进制的字符串形式的数组(按照每一行)
@@ -65,6 +65,18 @@ class CliMessage
      * @var string 命令行获取输入的参数的提示信息
      */
     private string $cli_input_tips = '';
+
+    /**
+     * @var array|string[] 动画选项
+     */
+    private array $animations = [
+        'flash', 'line', 'dot'
+    ];
+
+    /**
+     * @var string 选择的动画类型
+     */
+    private string $animation = '';
 
     private CLImate $cli;
 
@@ -210,22 +222,94 @@ class CliMessage
     }
 
     /**
-     * @desc 输出打印点阵体内容
+     * @desc 按闪烁动画输出内容
      * @user lei
      * @date 2021/5/5
      */
-    private function print()
+    private function flashPrint()
     {
+        while (true) {
+            for ($k = 0; $k < $this->lines; $k++) {
+                $tmp = '';
+                for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
+                    for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
+                        $tmp .= $this->dot_array[$k][$i][$j];
+                    }
+                    $tmp .= PHP_EOL;
+                }
+                echo $tmp;
+            }
+            $this->clearCurrentStdout();
+
+            for ($k = 0; $k < $this->lines; $k++) {
+                $tmp = '';
+                for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
+                    for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
+                        $tmp .= $this->dot_array[$k][$i][$j] == $this->inner_show ? $this->outer_show : $this->inner_show;
+                    }
+                    $tmp .= PHP_EOL;
+                }
+                echo $tmp;
+            }
+            $this->clearCurrentStdout();
+        }
+    }
+
+    /**
+     * @desc 按行输出内容
+     * @user lei
+     * @date 2021/5/6
+     */
+    private function linePrint() {
+        for ($k = 0; $k < $this->lines; $k++) {
+            $tmp = '';
+            for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
+                for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
+                    $tmp .= $this->dot_array[$k][$i][$j];
+                }
+                $tmp .= PHP_EOL;
+            }
+            usleep($this->print_line_frequency);
+            echo $tmp;
+        }
+    }
+
+    /**
+     * @desc 按点输出内容
+     * @user lei
+     * @date 2021/5/6
+     */
+    private function dotPrint() {
         for ($k = 0; $k < $this->lines; $k++) {
             for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
                 for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
                     echo $this->dot_array[$k][$i][$j];
+                    usleep(intval($this->print_line_frequency / self::PER_FONT_BINARY_LENGTH));
                 }
                 echo PHP_EOL;
-                usleep($this->print_line_frequency);
             }
         }
+    }
 
+    public function print() {
+        $method = $this->animation . 'Print';
+        $this->$method();
+    }
+
+    /**
+     * @desc 清楚当前命令行的标准输出, 以实现动画效果(重新输出)
+     * @user lei
+     * @date 2021/5/6
+     */
+    private function clearCurrentStdout() {
+        usleep($this->print_line_frequency);
+        $cmd = [];
+        for ($i = 0; $i < $this->lines * self::HEIGHT; $i++) {
+            $cmd[] = "tput cuu1";
+            $cmd[] = "tput el";
+        }
+        $cmds = implode('&&', $cmd);
+        system($cmds);
     }
 
     /**
@@ -249,9 +333,15 @@ class CliMessage
         $this->cli_input_tips = $tips;
     }
 
+    /**
+     * @desc 检查每行字数是否合理
+     * @user lei
+     * @date 2021/5/6
+     * @throws \Exception
+     */
     private function checkPerLineQuantity() {
         if (!is_numeric($this->per_line_quantity)) {
-            throw new \Exception('please set message that you want to print');
+            throw new \Exception('please set the number that you want to print per line');
         }
     }
 
@@ -259,8 +349,9 @@ class CliMessage
         $this->setCliInputTips('请输入您想打印的内容:');
         $this->message = $this->getArgs();
         $this->checkMessage();
-        $this->setCliInputTips('请输入您想打印时,每一行展示的字数:');
-        $this->per_line_quantity = $this->getArgs();
+        $this->setCliInputTips("请输入每一行展示的字数, 默认为'{$this->per_line_quantity}':");
+        $per_line_quantity = $this->getArgs();
+        $this->per_line_quantity = empty($per_line_quantity) ? $this->per_line_quantity : $per_line_quantity;
         $this->checkPerLineQuantity();
         $this->setCliInputTips("请输入您想打印时,命中时展示的样式, 默认为'{$this->inner_show}':");
         $inner_show = $this->getArgs();
@@ -268,6 +359,8 @@ class CliMessage
         $this->setCliInputTips("请输入您想打印时,未命中时展示的样式, 默认为'{$this->outer_show}':");
         $outer_show = $this->getArgs();
         $this->outer_show = empty($outer_show) ? $this->outer_show : $outer_show;
+        $input = $this->cli->radio('请输入展示时的动画:', $this->animations);
+        $this->animation = $input->prompt();
     }
 
     public function run()
