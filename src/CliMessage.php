@@ -54,7 +54,7 @@ class CliMessage
     /**
      * @var int 打印的速度(频率), 微秒
      */
-    private int $print_line_frequency = 750000;
+    private int $print_frequency = 750000;
 
     /**
      * @var array 二进制的字符串形式的数组(按照每一行)
@@ -262,15 +262,16 @@ class CliMessage
      */
     private function linePrint() {
         for ($k = 0; $k < $this->lines; $k++) {
-            $tmp = '';
             for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
+                $tmp = '';
                 for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
                     $tmp .= $this->dot_array[$k][$i][$j];
                 }
                 $tmp .= PHP_EOL;
+                echo $tmp;
+                usleep(intval($this->print_frequency / self::HEIGHT));
             }
-            usleep($this->print_line_frequency);
-            echo $tmp;
+
         }
     }
 
@@ -284,7 +285,7 @@ class CliMessage
             for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
                 for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
                     echo $this->dot_array[$k][$i][$j];
-                    usleep(intval($this->print_line_frequency / self::PER_FONT_BINARY_LENGTH));
+                    usleep(intval($this->print_frequency / self::PER_FONT_BINARY_LENGTH));
                 }
                 echo PHP_EOL;
             }
@@ -302,7 +303,7 @@ class CliMessage
      * @date 2021/5/6
      */
     private function clearCurrentStdout() {
-        usleep($this->print_line_frequency);
+        usleep($this->print_frequency);
         $cmd = [];
         for ($i = 0; $i < $this->lines * self::HEIGHT; $i++) {
             $cmd[] = "tput cuu1";
