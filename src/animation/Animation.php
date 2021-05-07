@@ -40,15 +40,15 @@ abstract class Animation
     {
         $appended_array = [];
         $origin_array = $this->object->dot_array;
-        foreach ($origin_array as $k => $v) {
-            for ($i = 0; $i < $this->object->per_line_quantity; $i++) { //行数
+        foreach ($origin_array as $v) {
+            for ($i = 0; $i < $this->object->per_line_quantity; $i++) { //每个字
                 $tmp = []; //一个字的点阵数据
                 for ($h = 0; $h < $this->object->height; $h++) {
                     for ($j = 0; $j < $this->object->height; $j++) {
-                        $tmp[$h][$j] = $v[$i * $this->object->height + $h][$j];
+                        $tmp[$h][$j] = $v[$h][$i * $this->object->height + $j] ?? $this->object->fill_icon;
                     }
                 }
-                $appended_array[$k][] = $this->appendArrayWithFont($tmp);
+                $appended_array[] = $this->appendArrayWithFont($tmp);
             }
         }
         return $appended_array;
@@ -86,6 +86,6 @@ abstract class Animation
             }
             echo PHP_EOL;
         }
-        exit;
+        //exit;
     }
 }
