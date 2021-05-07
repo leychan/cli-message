@@ -2,6 +2,12 @@
 
 namespace cliMessage;
 
+use cliMessage\animation\Animation;
+use cliMessage\animation\AnimationObject;
+use cliMessage\animation\DotAnimation;
+use cliMessage\animation\FlashAnimation;
+use cliMessage\animation\LineAnimation;
+use cliMessage\animation\VerticalAnimation;
 use League\CLImate\CLImate;
 
 class CliMessage
@@ -70,7 +76,7 @@ class CliMessage
      * @var array|string[] 动画选项
      */
     private array $animations = [
-        'flash', 'line', 'dot'
+        'flash', 'line', 'dot', 'vertical'
     ];
 
     /**
@@ -80,8 +86,11 @@ class CliMessage
 
     private CLImate $cli;
 
+    private AnimationObject $object;
+
     public function __construct() {
         $this->cli = new CLImate();
+        $this->object = new AnimationObject();
     }
 
     /**
@@ -93,6 +102,7 @@ class CliMessage
     public function setPerLineQuantity(int $num)
     {
         $this->per_line_quantity = $num;
+        $this->object->per_line_quantity = $num;
     }
 
     /**
@@ -108,10 +118,12 @@ class CliMessage
 
     public function setInnerShow(string $inner_show) {
         $this->inner_show = $inner_show;
+        $this->object->center_icon = $inner_show;
     }
 
     public function setOuterShow(string $outer_show) {
         $this->outer_show = $outer_show;
+        $this->object->fill_icon = $outer_show;
     }
 
     /**
@@ -204,6 +216,27 @@ class CliMessage
                 }
             }
         }
+        $this->object->dot_array = $this->dot_array;
+    }
+
+    private function shapeDotsToFontArray() {
+        //message长度
+        $len = count($this->message_array);
+
+        for ($line = 0; $line < $len; $line++) { //每一行
+            for ($i = 0; $i < $this->per_line_quantity; $i++) { //每一行的字数
+                for ($j = 0; $j < self::PER_FONT_BINARY_LENGTH; $j++) { //每个字的点阵图数据长度
+
+                    $x = $j % self::WIDTH; //数组的列数
+                    $y = floor($j / self::HEIGHT); //数组的行数
+                    $offset = $i * self::PER_FONT_BINARY_LENGTH + $j; //当前点阵图数据在数组中的位置
+                    $this->dot_array[$line][$i][$x][$y] =
+                        isset($this->message_array[$line][$offset]) && $this->message_array[$line][$offset] == 1
+                            ? $this->inner_show : $this->outer_show;
+                }
+            }
+        }
+        $this->object->dot_array = $this->dot_array;
     }
 
     /**
@@ -214,7 +247,12 @@ class CliMessage
     private function explodeDots()
     {
         $message_len = mb_strlen($this->message);
+        if ($message_len < $this->per_line_quantity) {
+            $this->per_line_quantity = $message_len;
+            $this->object->per_line_quantity = $message_len;
+        }
         $this->lines = intval(ceil($message_len / $this->per_line_quantity));
+        $this->object->lines = $this->lines;
         $block_len = self::PER_FONT_BINARY_LENGTH * $this->per_line_quantity;
         for ($i = 0; $i < $this->lines; $i++) {
             $this->message_array[] = substr($this->binary_message, $block_len * $i, $block_len);
@@ -228,31 +266,11 @@ class CliMessage
      */
     private function flashPrint()
     {
-        while (true) {
-            for ($k = 0; $k < $this->lines; $k++) {
-                $tmp = '';
-                for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
-                    for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
-                        $tmp .= $this->dot_array[$k][$i][$j];
-                    }
-                    $tmp .= PHP_EOL;
-                }
-                echo $tmp;
-            }
-            $this->clearCurrentStdout();
+        return new FlashAnimation($this->object);
+    }
 
-            for ($k = 0; $k < $this->lines; $k++) {
-                $tmp = '';
-                for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
-                    for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
-                        $tmp .= $this->dot_array[$k][$i][$j] == $this->inner_show ? $this->outer_show : $this->inner_show;
-                    }
-                    $tmp .= PHP_EOL;
-                }
-                echo $tmp;
-            }
-            $this->clearCurrentStdout();
-        }
+    private function verticalPrint() {
+        return new VerticalAnimation($this->object);
     }
 
     /**
@@ -261,18 +279,7 @@ class CliMessage
      * @date 2021/5/6
      */
     private function linePrint() {
-        for ($k = 0; $k < $this->lines; $k++) {
-            for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
-                $tmp = '';
-                for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
-                    $tmp .= $this->dot_array[$k][$i][$j];
-                }
-                $tmp .= PHP_EOL;
-                echo $tmp;
-                usleep(intval($this->print_frequency / self::HEIGHT));
-            }
-
-        }
+        return new LineAnimation($this->object);
     }
 
     /**
@@ -281,20 +288,12 @@ class CliMessage
      * @date 2021/5/6
      */
     private function dotPrint() {
-        for ($k = 0; $k < $this->lines; $k++) {
-            for ($i = 0; $i < count($this->dot_array[$k]); $i++) {
-                for ($j = 0; $j < count($this->dot_array[$k][0]); $j++) {
-                    echo $this->dot_array[$k][$i][$j];
-                    usleep(intval($this->print_frequency / self::PER_FONT_BINARY_LENGTH));
-                }
-                echo PHP_EOL;
-            }
-        }
+        return new DotAnimation($this->object);
     }
 
     public function print() {
         $method = $this->animation . 'Print';
-        $this->$method();
+        $this->$method()->animate();
     }
 
     /**
@@ -350,16 +349,23 @@ class CliMessage
         $this->setCliInputTips('请输入您想打印的内容:');
         $this->message = $this->getArgs();
         $this->checkMessage();
+
         $this->setCliInputTips("请输入每一行展示的字数, 默认为'{$this->per_line_quantity}':");
         $per_line_quantity = $this->getArgs();
-        $this->per_line_quantity = empty($per_line_quantity) ? $this->per_line_quantity : $per_line_quantity;
+        $per_line_quantity = empty($per_line_quantity) ? $this->per_line_quantity : $per_line_quantity;
+        $this->setPerLineQuantity($per_line_quantity);
         $this->checkPerLineQuantity();
+
         $this->setCliInputTips("请输入您想打印时,命中时展示的样式, 默认为'{$this->inner_show}':");
-        $inner_show = $this->getArgs();
-        $this->inner_show = empty($inner_show) ? $this->inner_show : $inner_show;
+        $inner_show = $this->getArgs() ;
+        $inner_show = empty($inner_show) ? $this->inner_show : $inner_show;
+        $this->setInnerShow($inner_show);
+
         $this->setCliInputTips("请输入您想打印时,未命中时展示的样式, 默认为'{$this->outer_show}':");
         $outer_show = $this->getArgs();
-        $this->outer_show = empty($outer_show) ? $this->outer_show : $outer_show;
+        $outer_show = empty($outer_show) ? $this->outer_show : $outer_show;
+        $this->setOuterShow($outer_show);
+
         $input = $this->cli->radio('请输入展示时的动画:', $this->animations);
         $this->animation = $input->prompt();
     }
