@@ -17,15 +17,6 @@ class CliMessage
     const PER_FONT_BINARY_LENGTH = 256; //一个字二进制串的长度
     const PER_FONT_DOT_LENGTH = 32; //一个字符(非汉字)在汉字库中的长度
     const FONT_FILE = __DIR__ . '/font_file/HZK16'; //汉字库文件
-    /**
-     * @var int 每行打印的字数
-     */
-    private int $per_line_quantity = 4;
-
-    /**
-     * @var int 根据输入的字符数量和每行打印的字数算出的行数
-     */
-    private int $lines = 0; //根据输入的字符数量和每行打印的字数算出的行数
 
     /**
      * @var string 要打印的字符
@@ -41,26 +32,6 @@ class CliMessage
      * @var string 输入的字符的二进制形式
      */
     private string $binary_message = '';
-
-    /**
-     * @var string 打印输出时展示的命中图标
-     */
-    private string $inner_show = '■';
-
-    /**
-     * @var string 打印输出时展示的未命中的图标
-     */
-    private string $outer_show = '♡';
-
-    /**
-     * @var array 最终的要打印的二进制数组(按照每一行)
-     */
-    private array $dot_array = [];
-
-    /**
-     * @var int 打印的速度(频率), 微秒
-     */
-    private int $print_frequency = 750000;
 
     /**
      * @var array 二进制的字符串形式的数组(按照每一行)
@@ -101,7 +72,6 @@ class CliMessage
      */
     public function setPerLineQuantity(int $num)
     {
-        $this->per_line_quantity = $num;
         $this->object->per_line_quantity = $num;
     }
 
@@ -116,14 +86,12 @@ class CliMessage
         $this->message = $message;
     }
 
-    public function setInnerShow(string $inner_show) {
-        $this->inner_show = $inner_show;
-        $this->object->center_icon = $inner_show;
+    public function setInnerShow(string $center_icon) {
+        $this->object->center_icon = $center_icon;
     }
 
-    public function setOuterShow(string $outer_show) {
-        $this->outer_show = $outer_show;
-        $this->object->fill_icon = $outer_show;
+    public function setOuterShow(string $fill_icon) {
+        $this->object->fill_icon = $fill_icon;
     }
 
     /**
@@ -205,38 +173,17 @@ class CliMessage
     {
         $len = count($this->message_array);
         for ($line = 0; $line < $len; $line++) { //每一行
-            for ($i = 0; $i < $this->per_line_quantity; $i++) { //每一行的字数
+            for ($i = 0; $i < $this->object->per_line_quantity; $i++) { //每一行的字数
                 for ($j = 0; $j < self::PER_FONT_BINARY_LENGTH; $j++) { //每个字的点阵图数据长度
                     $x = $j % self::WIDTH; //数组的列数
                     $y = floor($j / self::HEIGHT); //数组的行数
                     $offset = $i * self::PER_FONT_BINARY_LENGTH + $j; //当前点阵图数据在数组中的位置
-                    $this->dot_array[$line][$y][$x + $i * self::WIDTH] =
+                    $this->object->dot_array[$line][$y][$x + $i * self::WIDTH] =
                         isset($this->message_array[$line][$offset]) && $this->message_array[$line][$offset] == 1
-                            ? $this->inner_show : $this->outer_show;
+                            ? $this->object->center_icon : $this->object->fill_icon;
                 }
             }
         }
-        $this->object->dot_array = $this->dot_array;
-    }
-
-    private function shapeDotsToFontArray() {
-        //message长度
-        $len = count($this->message_array);
-
-        for ($line = 0; $line < $len; $line++) { //每一行
-            for ($i = 0; $i < $this->per_line_quantity; $i++) { //每一行的字数
-                for ($j = 0; $j < self::PER_FONT_BINARY_LENGTH; $j++) { //每个字的点阵图数据长度
-
-                    $x = $j % self::WIDTH; //数组的列数
-                    $y = floor($j / self::HEIGHT); //数组的行数
-                    $offset = $i * self::PER_FONT_BINARY_LENGTH + $j; //当前点阵图数据在数组中的位置
-                    $this->dot_array[$line][$i][$x][$y] =
-                        isset($this->message_array[$line][$offset]) && $this->message_array[$line][$offset] == 1
-                            ? $this->inner_show : $this->outer_show;
-                }
-            }
-        }
-        $this->object->dot_array = $this->dot_array;
     }
 
     /**
@@ -247,14 +194,12 @@ class CliMessage
     private function explodeDots()
     {
         $message_len = mb_strlen($this->message);
-        if ($message_len < $this->per_line_quantity) {
-            $this->per_line_quantity = $message_len;
+        if ($message_len < $this->object->per_line_quantity) {
             $this->object->per_line_quantity = $message_len;
         }
-        $this->lines = intval(ceil($message_len / $this->per_line_quantity));
-        $this->object->lines = $this->lines;
-        $block_len = self::PER_FONT_BINARY_LENGTH * $this->per_line_quantity;
-        for ($i = 0; $i < $this->lines; $i++) {
+        $this->object->lines = intval(ceil($message_len / $this->object->per_line_quantity));
+        $block_len = self::PER_FONT_BINARY_LENGTH * $this->object->per_line_quantity;
+        for ($i = 0; $i < $this->object->lines; $i++) {
             $this->message_array[] = substr($this->binary_message, $block_len * $i, $block_len);
         }
     }
@@ -304,7 +249,7 @@ class CliMessage
     private function clearCurrentStdout() {
         usleep($this->print_frequency);
         $cmd = [];
-        for ($i = 0; $i < $this->lines * self::HEIGHT; $i++) {
+        for ($i = 0; $i < $this->object->lines * self::HEIGHT; $i++) {
             $cmd[] = "tput cuu1";
             $cmd[] = "tput el";
         }
@@ -340,7 +285,7 @@ class CliMessage
      * @throws \Exception
      */
     private function checkPerLineQuantity() {
-        if (!is_numeric($this->per_line_quantity)) {
+        if (!is_numeric($this->object->per_line_quantity)) {
             throw new \Exception('please set the number that you want to print per line');
         }
     }
@@ -350,21 +295,21 @@ class CliMessage
         $this->message = $this->getArgs();
         $this->checkMessage();
 
-        $this->setCliInputTips("请输入每一行展示的字数, 默认为'{$this->per_line_quantity}':");
+        $this->setCliInputTips("请输入每一行展示的字数, 默认为'{$this->object->per_line_quantity}':");
         $per_line_quantity = $this->getArgs();
-        $per_line_quantity = empty($per_line_quantity) ? $this->per_line_quantity : $per_line_quantity;
+        $per_line_quantity = empty($per_line_quantity) ? $this->object->per_line_quantity : $per_line_quantity;
         $this->setPerLineQuantity($per_line_quantity);
         $this->checkPerLineQuantity();
 
-        $this->setCliInputTips("请输入您想打印时,命中时展示的样式, 默认为'{$this->inner_show}':");
-        $inner_show = $this->getArgs() ;
-        $inner_show = empty($inner_show) ? $this->inner_show : $inner_show;
-        $this->setInnerShow($inner_show);
+        $this->setCliInputTips("请输入您想打印时,命中时展示的样式, 默认为'{$this->object->center_icon}':");
+        $center_icon = $this->getArgs() ;
+        $center_icon = empty($center_icon) ? $this->object->center_icon : $center_icon;
+        $this->setInnerShow($center_icon);
 
-        $this->setCliInputTips("请输入您想打印时,未命中时展示的样式, 默认为'{$this->outer_show}':");
-        $outer_show = $this->getArgs();
-        $outer_show = empty($outer_show) ? $this->outer_show : $outer_show;
-        $this->setOuterShow($outer_show);
+        $this->setCliInputTips("请输入您想打印时,未命中时展示的样式, 默认为'{$this->object->fill_icon}':");
+        $fill_icon = $this->getArgs();
+        $fill_icon = empty($fill_icon) ? $this->object->fill_icon : $fill_icon;
+        $this->setOuterShow($fill_icon);
 
         $input = $this->cli->radio('请输入展示时的动画:', $this->animations);
         $this->animation = $input->prompt();

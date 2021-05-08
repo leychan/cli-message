@@ -27,9 +27,9 @@ class AnimationObject {
     /**
      * @var int 每行展示的字数
      */
-   public int $per_line_quantity;
+   public int $per_line_quantity = 4;
 
-   public string $center_icon;
+   public string $center_icon = '■';
 
-   public string $fill_icon;
+   public string $fill_icon = '♡';
 }
