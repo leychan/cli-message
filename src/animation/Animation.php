@@ -4,6 +4,8 @@
 namespace cliMessage\animation;
 
 
+use cliMessage\utils\Helper;
+
 abstract class Animation
 {
     public AnimationObject $object;
@@ -24,6 +26,11 @@ abstract class Animation
     abstract function animate();
 
 
+    /**
+     * @desc 清除上次的标准输出
+     * @user lei
+     * @date 2021/5/8
+     */
     public function clear()
     {
         usleep($this->object->frequency);
@@ -36,6 +43,12 @@ abstract class Animation
         system($cmds);
     }
 
+    /**
+     * @desc 对每个字的数据点阵进行边框扩充,以实现动画
+     * @user lei
+     * @date 2021/5/8
+     * @return array
+     */
     public function appendFontEdge()
     {
         $appended_array = [];
@@ -51,9 +64,18 @@ abstract class Animation
                 $appended_array[] = $this->appendArrayWithFont($tmp);
             }
         }
-        return $appended_array;
+        $this->object->dot_array = $appended_array;
+        //return $appended_array;
     }
 
+    /**
+     * @desc 初始化空白数据点阵数组
+     * @user lei
+     * @date 2021/5/8
+     * @param int $length
+     * @param string $fill
+     * @return array
+     */
     public function initFontFilledArray(int $length, string $fill): array
     {
         $filled_array = [];
@@ -64,6 +86,13 @@ abstract class Animation
         return $filled_array;
     }
 
+    /**
+     * @desc 对空白填充数组进行数据填充(将数据填充到扩充后的数组中)
+     * @user chenlei11
+     * @date 2021/5/8
+     * @param array $font_array
+     * @return array
+     */
     public function appendArrayWithFont(array $font_array)
     {
         $length = self::APPEND_LENGTH * 2 + $this->object->height;
@@ -84,7 +113,7 @@ abstract class Animation
             foreach ($v as $v1) {
                 echo $v1;
             }
-            echo PHP_EOL;
+            Helper::printLine();
         }
         //exit;
     }

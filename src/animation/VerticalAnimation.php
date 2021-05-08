@@ -7,17 +7,17 @@ namespace cliMessage\animation;
 class VerticalAnimation extends Animation
 {
 
-
     /**
      * @inheritDoc
      */
     function animate()
     {
-        $dot_array = $this->appendFontEdge();
+        $this->appendFontEdge();
         $this->object->height = self::APPEND_LENGTH * 2 + $this->object->height;
+        $this->object->lines = 1;  //一行输出
         $this->object->frequency /= 2;
         while (true) {
-            foreach ($dot_array as $font) {
+            foreach ($this->object->dot_array as $font) {
                 for ($i = 0; $i < $this->object->height; $i++) {
                     for ($j = 0; $j < $this->object->height; $j++) {
                         echo $font[$i][$j];
