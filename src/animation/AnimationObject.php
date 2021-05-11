@@ -7,7 +7,7 @@ class AnimationObject {
     /**
      * @var int 打印的行数
      */
-   public int $lines;
+   public int $lines = 1;
 
     /**
      * @var int 动画频率
@@ -32,4 +32,14 @@ class AnimationObject {
    public string $center_icon = '■';
 
    public string $fill_icon = '♡';
+
+    /**
+     * @var int 字符串个数
+     */
+   public int $font_count;
+
+    /**
+     * @var bool 是否显示因为填充而产生的空白字体
+     */
+   public bool $with_white_font = false;
 }

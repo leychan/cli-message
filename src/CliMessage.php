@@ -5,6 +5,7 @@ namespace cliMessage;
 use cliMessage\animation\Animation;
 use cliMessage\animation\AnimationObject;
 use cliMessage\animation\DotAnimation;
+use cliMessage\animation\DynamicBannerAnimation;
 use cliMessage\animation\FlashAnimation;
 use cliMessage\animation\LineAnimation;
 use cliMessage\animation\VerticalAnimation;
@@ -47,7 +48,7 @@ class CliMessage
      * @var array|string[] 动画选项
      */
     private array $animations = [
-        'flash', 'line', 'dot', 'vertical'
+        'flash', 'line', 'dot', 'vertical', 'banner'
     ];
 
     /**
@@ -193,11 +194,12 @@ class CliMessage
      */
     private function explodeDots()
     {
-        $message_len = mb_strlen($this->message);
-        if ($message_len < $this->object->per_line_quantity) {
-            $this->object->per_line_quantity = $message_len;
+        $this->object->font_count = mb_strlen($this->message);
+
+        if ($this->object->font_count < $this->object->per_line_quantity) {
+            $this->object->per_line_quantity = $this->object->font_count;
         }
-        $this->object->lines = intval(ceil($message_len / $this->object->per_line_quantity));
+        $this->object->lines = intval(ceil($this->object->font_count / $this->object->per_line_quantity));
         $block_len = self::PER_FONT_BINARY_LENGTH * $this->object->per_line_quantity;
         for ($i = 0; $i < $this->object->lines; $i++) {
             $this->message_array[] = substr($this->binary_message, $block_len * $i, $block_len);
@@ -216,6 +218,10 @@ class CliMessage
 
     private function verticalPrint() {
         return new VerticalAnimation($this->object);
+    }
+
+    private function bannerPrint() {
+        return new DynamicBannerAnimation($this->object);
     }
 
     /**

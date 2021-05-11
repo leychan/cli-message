@@ -10,6 +10,10 @@ abstract class Animation
 {
     public AnimationObject $object;
 
+    public int $frequency = 0;
+
+    public array $fonts;
+
     const APPEND_LENGTH = 3;
 
     public function __construct(AnimationObject $object)
@@ -33,13 +37,14 @@ abstract class Animation
      */
     public function clear()
     {
+        $this->object->frequency = $this->frequency ?: $this->object->frequency;
         usleep($this->object->frequency);
         $cmd = [];
         for ($i = 0; $i < $this->object->lines * $this->object->height; $i++) {
             $cmd[] = "tput cuu1";
             $cmd[] = "tput el";
         }
-        $cmds = implode('&&', $cmd);
+        $cmds = implode(' && ', $cmd);
         system($cmds);
     }
 
@@ -51,7 +56,15 @@ abstract class Animation
      */
     public function appendFontEdge()
     {
-        $appended_array = [];
+        $this->splitDotArrayToFont();
+        foreach ($this->fonts as $font) {
+            $tmp[] = $this->appendArrayWithFont($font);
+        }
+        $this->object->dot_array = $tmp;
+        $this->resetHeight();
+    }
+
+    public function splitDotArrayToFont() {
         $origin_array = $this->object->dot_array;
         foreach ($origin_array as $v) {
             for ($i = 0; $i < $this->object->per_line_quantity; $i++) { //每个字
@@ -61,11 +74,12 @@ abstract class Animation
                         $tmp[$h][$j] = $v[$h][$i * $this->object->height + $j] ?? $this->object->fill_icon;
                     }
                 }
-                $appended_array[] = $this->appendArrayWithFont($tmp);
+                $this->fonts[] = $tmp;
             }
         }
-        $this->object->dot_array = $appended_array;
-        //return $appended_array;
+        if (!$this->object->with_white_font) {
+            $this->fonts = array_slice($this->fonts, 0, $this->object->font_count);
+        }
     }
 
     /**
@@ -106,6 +120,10 @@ abstract class Animation
             }
         }
         return $init_array;
+    }
+
+    private function resetHeight() {
+        $this->object->height = count($this->object->dot_array[0]);
     }
 
     public function printFont($arr) {
