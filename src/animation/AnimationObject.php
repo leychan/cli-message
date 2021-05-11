@@ -42,4 +42,10 @@ class AnimationObject {
      * @var bool 是否显示因为填充而产生的空白字体
      */
    public bool $with_white_font = false;
+
+   public string $message;
+
+   public string $gb2312_message;
+
+   public array $message_array;
 }
