@@ -3,6 +3,7 @@
 
 namespace cliMessage\animation;
 
+use cliMessage\utils\Helper;
 
 class VerticalAnimation extends Animation
 {
@@ -15,65 +16,29 @@ class VerticalAnimation extends Animation
         $this->appendFontEdge();
         $this->object->lines = 1;  //一行输出
         $this->object->frequency /= 2;
-        while (true) {
-            foreach ($this->object->dot_array as $font) {
-                for ($i = 0; $i < $this->object->height; $i++) {
-                    for ($j = 0; $j < $this->object->height; $j++) {
-                        echo $font[$i][$j];
-                    }
-                    echo PHP_EOL;
-                }
+        //while (true) {
+            $this->shift();
+        //}
+    }
 
+    public function shift() {
+        $shifts = [0, 1, 2, 3, 2, 1, 0, -1, -2, -3, -2, -1, 0];
+        //$shifts = [0, 1, 2, 3];
+        foreach ($this->object->dot_array as $font) {
+            foreach ($shifts as $shift) { //每个偏移量
+                $this->printShift($font, $shift);
                 $this->clear();
-
-                //打印上移
-                for ($i = self::APPEND_LENGTH; $i < $this->object->height; $i++) {
-                    for ($j = 0; $j < $this->object->height; $j++) {
-                        echo $font[$i][$j];
-                    }
-                    echo PHP_EOL;
-                }
-                for ($i = 0; $i < self::APPEND_LENGTH; $i++) {
-                    for ($j = 0; $j < $this->object->height; $j++) {
-                        echo $font[$i][$j];
-                    }
-                    echo PHP_EOL;
-                }
-
-                $this->clear();
-
-
-                //打印还原
-                for ($i = 0; $i < $this->object->height; $i++) {
-                    for ($j = 0; $j < $this->object->height; $j++) {
-                        echo $font[$i][$j];
-                    }
-                    echo PHP_EOL;
-                }
-
-                $this->clear();
-
-
-                //打印下移
-                for ($i = 0; $i < self::APPEND_LENGTH; $i++) {
-                    for ($j = 0; $j < $this->object->height; $j++) {
-                        echo $this->object->fill_icon;
-                    }
-                    echo PHP_EOL;
-                }
-                for ($i = 0; $i < $this->object->height - 3; $i++) {
-                    for ($j = 0; $j < $this->object->height; $j++) {
-                        echo $font[$i][$j];
-
-                    }
-                    echo PHP_EOL;
-
-                }
-
-                $this->clear();
+                //Helper::printLine();
             }
-
         }
+    }
 
+    public function printShift($font, $shift) {
+        for ($i = $shift; $i < $this->object->height + $shift; $i++) {
+            for ($j = 0; $j < $this->object->height; $j++) {
+                echo $font[$i][$j] ?? $this->object->fill_icon;
+            }
+            Helper::printLine();
+        }
     }
 }

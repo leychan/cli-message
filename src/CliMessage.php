@@ -248,22 +248,6 @@ class CliMessage
     }
 
     /**
-     * @desc 清楚当前命令行的标准输出, 以实现动画效果(重新输出)
-     * @user lei
-     * @date 2021/5/6
-     */
-    private function clearCurrentStdout() {
-        usleep($this->print_frequency);
-        $cmd = [];
-        for ($i = 0; $i < $this->object->lines * self::HEIGHT; $i++) {
-            $cmd[] = "tput cuu1";
-            $cmd[] = "tput el";
-        }
-        $cmds = implode('&&', $cmd);
-        system($cmds);
-    }
-
-    /**
      * @desc 获取命令行输入的参数
      * @user lei
      * @date 2021/5/5

@@ -41,10 +41,9 @@ abstract class Animation
         usleep($this->object->frequency);
         $cmd = [];
         for ($i = 0; $i < $this->object->lines * $this->object->height; $i++) {
-            $cmd[] = "tput cuu1";
-            $cmd[] = "tput el";
+            $cmd[] = " tput cuu1 && tput el ";
         }
-        $cmds = implode(' && ', $cmd);
+        $cmds = implode("&&", $cmd);
         system($cmds);
     }
 

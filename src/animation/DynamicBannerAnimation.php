@@ -26,10 +26,10 @@ class DynamicBannerAnimation extends Animation
             }
         }
         while (true) {
-            for ($i = 0; $i < ($this->object->font_count - 1) * $this->object->height; $i++) {
+            for ($i = 0; $i < ($this->object->font_count) * $this->object->height; $i++) {
                 for ($j = 0; $j < $this->object->height; $j++) {
                     for ($k = 0; $k < $this->object->height; $k++) {
-                        echo $new_dot_array[$j][$k + $i];
+                        echo $new_dot_array[$j][$k + $i] ?? $this->object->fill_icon;
                     }
                     echo PHP_EOL;
                 }
