@@ -183,7 +183,7 @@ class CliMessage
     {
         try {
             $this->cliRun();
-            (new dealMessage($this->object))->run();
+            $this->object = (new dealMessage($this->object))->run();
             $this->print();
         } catch (\Exception $e) {
             echo $e->getMessage();
