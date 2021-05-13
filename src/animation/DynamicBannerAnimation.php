@@ -16,7 +16,7 @@ class DynamicBannerAnimation extends Animation
     function animate()
     {
         $this->splitDotArrayToFont();
-        //讲字体拼接成一行
+        //将字体拼接成一行
         $new_dot_array = [];
         for ($i = 0; $i < $this->object->font_count; $i++) {
             for ($j = 0; $j < $this->object->height; $j++) {

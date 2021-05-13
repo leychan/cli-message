@@ -39,12 +39,8 @@ abstract class Animation
     {
         $this->object->frequency = $this->frequency ?: $this->object->frequency;
         usleep($this->object->frequency);
-        $cmd = [];
-        for ($i = 0; $i < $this->object->lines * $this->object->height; $i++) {
-            $cmd[] = " tput cuu1 && tput el ";
-        }
-        $cmds = implode("&&", $cmd);
-        system($cmds);
+        $dot_lines = $this->object->lines * $this->object->height;
+        system("tput cuu {$dot_lines}");
     }
 
     /**
